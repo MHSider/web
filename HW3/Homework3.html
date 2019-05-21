@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+#containerMain {
+  width: 60vw;
+  height: 60vw;
+  float: left;
+  margin: 10px;
+}
+
+#container1 {
+  width: 20vw;
+  height: 20vw;
+  float: right;
+  margin: 2px;
+}
+
+#container2 {
+  width: 20vw;
+  height: 20vw;
+  float: right;
+  margin: 2px;
+}
+
+#container3 {
+  width: 20vw;
+  height: 20vw;
+  float: right;
+  margin: 2px;
+}
+
+p {
+  margin: 10px;
+  text-align: justify;
+}
+
+
+</style>
+</head>
+
+<body> 
+<h1 style="font-size:2em; text-align:center; margin:15px"> 
+城市風景
+</h1>
+
+<p>
+  在我們的一生當中，我們總是抓緊了時間從這地趕到那方，花了大半的時間在城市裡倉促穿梭，但你曾經慢下自己匆忙的腳步，欣賞過在我們身旁快速流竄的繁忙風景嗎？
+</p>
+<a href="javascript:toggleBack()">Back</a>
+<hr>
+
+<div id="containerMain">
+<!--canvas id='mycanvas'></canvas-->
+</div>
+<div id="container1">
+<!--canvas id='mycanvas'></canvas-->
+</div>
+<div id="container2">
+<!--canvas id='mycanvas'></canvas-->
+</div>
+<div id="container3">
+<!--canvas id='mycanvas'></canvas-->
+</div>
+
+<hr>
+<br>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+
+</script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<script>
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
+var pickables = [];
+
+var keys = [
+  [0, 0], [0.4, 0.6], [0.5, 0.6], [0.9, 0], [1, 0]
+];
+var T = 5;
+var clock = new THREE.Clock();
+var ts = clock.getElapsedTime();
+
+var x,y,z;
+
+$('#intensity').change ( function() {
+	console.log ( $(this).val() );
+  light1.light.penumbra = $(this).val();
+  light2.light.penumbra = $(this).val();
+  light3.light.penumbra = $(this).val();
+  light4.light.penumbra = $(this).val();
+})
+
+$('#tView').click(function() {
+//  toggleCamera();
+	lightsOff = !lightsOff;
+  
+  if (lightsOff) {
+  	light1.light.penumbra = 3;
+    light2.light.penumbra = 3;
+    light3.light.penumbra = 3;
+    light4.light.penumbra = 3;
+  } else {
+  	light1.light.penumbra = .5;
+    light2.light.penumbra = .5;
+    light3.light.penumbra = .5;
+    light4.light.penumbra = .5;  
+  }
+});
+
+function toggleBack() {
+	camera.position.set(x, y, z);
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  
+}
+
+class NewSpotLight{
+  	constructor(x, y, z, mesh, w ,v){
+      this.box = new THREE.Object3D();
+      this.x = x;
+      this.y = y;
+      this.z = z;
+      this.mesh = mesh;
+      this.w = w;
+      this.v = v;
+      this.light = new THREE.SpotLight(0xffffff);
+  }
+  
+  makeLight(){
+    this.light.position.set(this.x, this.y, this.z);
+    this.light.angle = 0.4;
+    this.light.penumbra = 0.6;
+    this.light.distance = 500;
+    this.light.decay = 1;
+    this.light.target = this.mesh;
+    
+    scene.add(this.light);
+  }
+  
+  makeBox(){
+  	var tower = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 10), new THREE.MeshPhongMaterial());
+    tower.castShadow = true; //default is false
+    tower.receiveShadow = false; //default
+    this.box.add(tower);
+    tower.position.set(this.x, this.y, this.z);
+    tower.rotation.x = -Math.PI / this.w;
+    tower.rotation.z = -Math.PI / this.v;
+    scene.add(this.box);
+  }
+}
+
+var scene, renderer, camera, cameraA, cameraB, cameraC, cameraD;
+var camera1;
+var camera2;
+var camera3;
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+  
+  renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  var ww = $('#containerMain').innerWidth();
+  var hh = $('#containerMain').innerHeight();
+  renderer.setSize(ww, hh);
+  renderer.setClearColor(0x555555);
+  $('#containerMain').append(renderer.domElement);
+  
+
+  camera = new THREE.PerspectiveCamera(50, ww / hh, 1, 10000);
+  camera.position.z = 500;
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  
+  
+
+  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+  //scene.add(gridXZ);
+
+  window.addEventListener('resize', onWindowResize, false);
+  
+  window.addEventListener('mousedown', onDocumentMouseDown, false);
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  let wall1 = new THREE.Mesh(new THREE.BoxGeometry(375, 300, 50), new THREE.MeshPhongMaterial())
+  scene.add(wall1);
+  wall1.position.x = 187.5;
+  wall1.position.y = 150;
+  wall1.position.z = -250;
+  
+  let wall2 = new THREE.Mesh(new THREE.BoxGeometry(50, 300, 250), new THREE.MeshPhongMaterial())
+  scene.add(wall2);
+  wall2.position.x = -375;
+  wall2.position.y = 150;
+  wall2.position.z = -125;
+  
+  let wall3 = new THREE.Mesh(new THREE.BoxGeometry(375, 300, 50), new THREE.MeshPhongMaterial())
+  scene.add(wall3);
+  wall3.position.x = -187.5;
+  wall3.position.y = 150;
+  wall3.position.z = 250;
+  
+  let wall4 = new THREE.Mesh(new THREE.BoxGeometry(50, 300, 250), new THREE.MeshPhongMaterial())
+  scene.add(wall4);
+  wall4.position.x = 375;
+  wall4.position.y = 150;
+  wall4.position.z = 125;
+  
+  let wallA = new THREE.Mesh(new THREE.BoxGeometry(1504, 300, 2), new THREE.MeshPhongMaterial())
+  scene.add(wallA);
+  wallA.position.x = 0;
+  wallA.position.y = 150;
+  wallA.position.z = -500;
+  
+  let wallB = new THREE.Mesh(new THREE.BoxGeometry(2, 300, 1000), new THREE.MeshPhongMaterial())
+  scene.add(wallB);
+  wallB.position.x = -750;
+  wallB.position.y = 150;
+  wallB.position.z = 0;
+  
+  let wallC = new THREE.Mesh(new THREE.BoxGeometry(1504, 300, 2), new THREE.MeshPhongMaterial())
+  scene.add(wallC);
+  wallC.position.x = 0;
+  wallC.position.y = 150;
+  wallC.position.z = 500;
+  
+  let wallD = new THREE.Mesh(new THREE.BoxGeometry(2, 300, 1000), new THREE.MeshPhongMaterial())
+  scene.add(wallD);
+  wallD.position.x = 750;
+  wallD.position.y = 150;
+  wallD.position.z = 0;
+
+
+  let loader = new THREE.TextureLoader();
+  loader.crossOrigin = '';
+  texture = loader.load('https://i.imgur.com/67ERJek.jpg');
+  texture.repeat.set (2,2);
+  texture.wrapS = texture.wrapT = true;
+
+  let floor = new THREE.Mesh(new THREE.PlaneGeometry(1500, 1000), new THREE.MeshPhongMaterial({
+    side: THREE.DoubleSide,
+    map: texture
+  }))
+  scene.add(floor)
+  floor.rotation.x = -Math.PI / 2
+  
+  let paintloader1 = new THREE.TextureLoader();
+  loader.crossOrigin = ''
+  let painttexture1 = loader.load("https://i.imgur.com/IIsljLJ.jpg"); // 570x713
+  let paint1 = new THREE.Mesh(new THREE.PlaneGeometry(175, 93.25), new THREE.MeshPhongMaterial({
+    map: painttexture1
+  }));
+  scene.add(paint1);
+  paint1.position.x = 187.5;
+  paint1.position.y = 150;
+  paint1.position.z = -224;
+  paint1.name = 'A';
+  
+  let paintloader2 = new THREE.TextureLoader();
+  loader.crossOrigin = ''
+  let painttexture2 = loader.load("https://i.imgur.com/fi2yhU5.jpg"); // 570x713
+  let paint2 = new THREE.Mesh(new THREE.PlaneGeometry(149.25, 120), new THREE.MeshPhongMaterial({
+    map: painttexture2
+  }));
+  scene.add(paint2);
+  paint2.position.x = -349;
+  paint2.position.y = 150;
+  paint2.position.z = -125;
+  paint2.rotation.y=Math.PI/2;
+  paint2.name = 'B';
+  
+  let paintloader3 = new THREE.TextureLoader();
+  loader.crossOrigin = ''
+  let painttexture3 = loader.load("https://i.imgur.com/mQXdgT3.jpg"); // 570x713
+  let paint3 = new THREE.Mesh(new THREE.PlaneGeometry(160, 90), new THREE.MeshPhongMaterial({
+    map: painttexture3
+  }));
+  scene.add(paint3);
+  paint3.position.x = -187.5;
+  paint3.position.y = 150;
+  paint3.position.z = 224;
+  paint3.rotation.y=Math.PI;
+  paint3.name = 'C';
+  
+  let paintloader4 = new THREE.TextureLoader();
+  loader.crossOrigin = ''
+  let painttexture4 = loader.load("https://i.imgur.com/ajjFZ7P.jpg"); // 570x713
+  let paint4 = new THREE.Mesh(new THREE.PlaneGeometry(134.5, 93.5), new THREE.MeshPhongMaterial({
+    map: painttexture4
+  }));
+  scene.add(paint4);
+  paint4.position.x = 349;
+  paint4.position.y = 150;
+  paint4.position.z = 125;
+  paint4.rotation.y=-Math.PI/2;
+  paint4.name = 'D';
+  
+  pickables.push (paint1, paint2 ,paint3, paint4);
+	
+  renderer1 = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  var ww1 = $('#container1').innerWidth();
+  var hh1 = $('#container1').innerHeight();
+  renderer1.setSize(ww1, hh1);
+  renderer1.setClearColor(0x555555);
+  $('#container1').append(renderer1.domElement);
+  
+  camera1 = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+  camera1.position.set(740, 290, 490);
+  camera1.lookAt(new THREE.Vector3(375, 100, 250));
+  
+  
+  renderer2 = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  var ww2 = $('#container2').innerWidth();
+  var hh2 = $('#container2').innerHeight();
+  renderer2.setSize(ww2, hh2);
+  renderer2.setClearColor(0x555555);
+  $('#container2').append(renderer2.domElement);
+  
+  camera2 = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+  camera2.position.set(-740, 290, -490);
+  camera2.lookAt(new THREE.Vector3(-375, 100, -250));
+  
+  
+  renderer3 = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  var ww3 = $('#container3').innerWidth();
+  var hh3 = $('#container3').innerHeight();
+  renderer3.setSize(ww3, hh3);
+  renderer3.setClearColor(0x555555);
+  $('#container3').append(renderer3.domElement);
+  
+  camera3 = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+  camera3.position.set(370, 290, -215);
+  camera3.lookAt(new THREE.Vector3(0, 100, 50));
+
+  /////////////////////////////////////////
+  mesh1 = new THREE.Mesh(new THREE.SphereGeometry(2, 2, 2), new THREE.MeshNormalMaterial());
+  mesh2 = new THREE.Mesh(new THREE.SphereGeometry(2, 2, 2), new THREE.MeshNormalMaterial());
+  mesh3 = new THREE.Mesh(new THREE.SphereGeometry(2, 2, 2), new THREE.MeshNormalMaterial());
+  mesh4 = new THREE.Mesh(new THREE.SphereGeometry(2, 2, 2), new THREE.MeshNormalMaterial());
+  
+  mesh1.position.set(187.5, 150, -250);
+  mesh2.position.set(-375, 150, -125);
+  mesh3.position.set(-187.5, 150, 250);
+  mesh4.position.set(375, 150, 125);
+  scene.add(mesh1);
+  scene.add(mesh2);
+  scene.add(mesh3);
+  scene.add(mesh4);
+  
+  light1 = new NewSpotLight(187.5,300,0,mesh1,-3.5,1);
+  light2 = new NewSpotLight(-125,300,-125,mesh2,1,-3.5);
+  light3 = new NewSpotLight(-187.5,300,0,mesh3,3.5,1);
+  light4 = new NewSpotLight(125,300,125,mesh4,1,3.5);
+  
+  
+  light1.makeLight();
+  light2.makeLight();
+  light3.makeLight();
+  light4.makeLight();
+  
+  light1.makeBox();
+  light2.makeBox();
+  light3.makeBox();
+  light4.makeBox();
+  
+  var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+	scene.add( directionalLight );
+  
+
+}
+
+function onDocumentMouseDown(event) {
+
+ 
+  var viewportPos =$('#containerMain').get(0).getBoundingClientRect(); 
+	mouse.x = ((event.clientX - viewportPos.left) / $('#containerMain').innerWidth()) * 2 - 1;
+  mouse.y = -((event.clientY - viewportPos.top) / $('#containerMain').innerHeight()) * 2 + 1;
+
+	raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects (pickables);
+  if (intersects.length > 0) {
+  	x = camera.position.x;
+    y = camera.position.y;
+    z = camera.position.z;
+  
+    if(intersects[0].object.name == "A"){
+      camera = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+      camera.position.set(187.5, 150, -24);
+      camera.lookAt(new THREE.Vector3(187.5, 150, -224));
+    }
+    if(intersects[0].object.name == "B"){
+    	camera = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+      camera.position.set(-149, 150, -125);
+      camera.lookAt(new THREE.Vector3(-349, 150, -125));
+    }
+    if(intersects[0].object.name == "C"){
+      camera = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+      camera.position.set(-187.5, 150, 24);
+      camera.lookAt(new THREE.Vector3(-187.5, 150, 224));
+    }
+    if(intersects[0].object.name == "D"){
+    	camera = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+      camera.position.set(149, 150, 125);
+      camera.lookAt(new THREE.Vector3(249, 150, 125));
+    }
+    renderer.render(scene, camera);
+  }
+}
+
+function onWindowResize() {
+	var ww = $('#containerMain').innerWidth();
+  var hh = $('#containerMain').innerHeight();
+  camera.aspect = ww / hh;
+  camera.updateProjectionMatrix();
+  renderer.setSize(ww, hh);
+}
+
+function keyframe(t) {
+  var s = ((t - ts) % T) / T;
+  //console.log(s);
+
+  for (var i = 1; i < keys.length; i++) {
+    if (keys[i][0] > s) break;
+  }
+  // take i-1
+  var ii = i - 1;
+  console.log (ii)
+  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+  intKey = keys[ii][1] * (1 - a) + keys[ii + 1][1] * a;
+  //console.log (a)
+	return intKey;
+  //console.log (intKey);  // array linear combo?!
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  
+  let intkey = keyframe(clock.getElapsedTime());
+  camera1.rotation.y = intkey + 0.35;
+  camera2.rotation.y = intkey - 0.95;
+  camera3.rotation.y = intkey + 0.45;
+  renderer.render(scene, camera);
+  renderer1.render(scene, camera1);
+  renderer2.render(scene, camera2);
+  renderer3.render(scene, camera3);
+  
+    
+}
+
+
+
+
+
+</script>
+</body>
+
+</html>
